@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>扣子编程部署指南 - 成都理工大学专业沿革螺旋塔</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a1f3a 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header .subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #60a5fa;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .step-list {
+            list-style: none;
+            counter-reset: step;
+        }
+
+        .step-list li {
+            position: relative;
+            padding-left: 50px;
+            margin-bottom: 20px;
+        }
+
+        .step-list li::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: #0a0e1a;
+        }
+
+        .file-list {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .file-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #a78bfa;
+        }
+
+        .file-desc {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .file-badge {
+            background: #60a5fa;
+            color: #0a0e1a;
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 15px;
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+
+        .code-block code {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #60a5fa;
+        }
+
+        .checklist {
+            list-style: none;
+        }
+
+        .checklist li {
+            padding: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checklist li::before {
+            content: "✅";
+            font-size: 18px;
+        }
+
+        .warning-box {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin: 20px 0;
+        }
+
+        .warning-box::before {
+            content: "⚠️";
+            margin-right: 10px;
+        }
+
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            color: #0a0e1a;
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(96, 165, 250, 0.3);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .file-item {
+                flex-direction: column;
+                text-align: left;
+                gap: 10px;
+            }
+            
+            .file-badge {
+                margin-left: 0;
+            }
+        }
+
+        .highlight {
+            background: rgba(96, 165, 250, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #60a5fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 扣子编程部署指南</h1>
+            <p class="subtitle">成都理工大学专业沿革螺旋塔 | 快速部署到扣子编程平台</p>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">📦 核心部署文件</h2>
+            
+            <div class="file-list">
+                <div class="file-item">
+                    <div class="file-info">
+                        <div class="file-name">cdut_spiral_tower_full_fix_optimized.html</div>
+                        <div class="file-desc">主界面文件（优化版）- 56.6 KB</div>
+                    </div>
+                    <div class="file-badge">必需</div>
+                </div>
+                
+                <div class="file-item">
+                    <div class="file-info">
+                        <div class="file-name">cdut_spiral_data.json</div>
+                        <div class="file-desc">数据文件 - 558.6 KB</div>
+                    </div>
+                    <div class="file-badge">必需</div>
+                </div>
+                
+                <div class="file-item">
+                    <div class="file-info">
+                        <div class="file-name">启动页_成都理工大学专业沿革螺旋塔.html</div>
+                        <div class="file-desc">启动页（可选）- 10.8 KB</div>
+                    </div>
+                    <div class="file-badge" style="background: #a78bfa;">可选</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">🎯 部署步骤</h2>
+            
+            <ol class="step-list">
+                <li>
+                    <strong>登录扣子编程平台</strong>
+                    <div style="margin-top: 10px;">
+                        访问：<a href="https://code.coze.cn/" target="_blank" style="color: #60a5fa;">https://code.coze.cn/</a>
+                    </div>
+                </li>
+                
+                <li>
+                    <strong>创建新项目</strong>
+                    <ul class="checklist" style="margin-top: 10px; padding-left: 0;">
+                        <li>点击"新建项目"</li>
+                        <li>选择"静态网站"或"HTML项目"</li>
+                        <li>命名：成都理工大学专业沿革螺旋塔</li>
+                    </ul>
+                </li>
+                
+                <li>
+                    <strong>上传文件</strong>
+                    <div class="code-block">
+                        方法一：拖拽上传<br>
+                        直接将 <span class="highlight">cdut_spiral_tower_full_fix_optimized.html</span> 和 <span class="highlight">cdut_spiral_data.json</span> 拖入项目编辑器
+                    </div>
+                </li>
+                
+                <li>
+                    <strong>配置入口文件</strong>
+                    <div style="margin-top: 10px;">
+                        设置入口为：<span class="highlight">cdut_spiral_tower_full_fix_optimized.html</span>
+                    </div>
+                </li>
+                
+                <li>
+                    <strong>运行预览</strong>
+                    <ul class="checklist" style="margin-top: 10px; padding-left: 0;">
+                        <li>点击"运行"或"预览"按钮</li>
+                        <li>在浏览器中查看效果</li>
+                        <li>测试交互功能</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">✅ 验证部署成功</h2>
+            
+            <div class="grid-2">
+                <div>
+                    <h3 style="margin-bottom: 15px; color: #a78bfa;">应该看到：</h3>
+                    <ul class="checklist">
+                        <li>页面显示"数据加载中..."</li>
+                        <li>1-2秒后螺旋塔正常显示</li>
+                        <li>可以拖拽旋转、缩放</li>
+                        <li>点击节点查看详情</li>
+                        <li>双击查看专业详情</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 style="margin-bottom: 15px; color: #a78bfa;">性能指标：</h3>
+                    <ul class="checklist">
+                        <li>首次加载：1.5-2.5秒</li>
+                        <li>二次加载：< 0.1秒</li>
+                        <li>HTML渲染：< 0.5秒</li>
+                        <li>缓存有效期：24小时</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">⚠️ 重要注意事项</h2>
+            
+            <div class="warning-box">
+                <strong>必须确保：</strong>
+                <ul style="margin-top: 10px; padding-left: 20px;">
+                    <li>两个文件必须在<span class="highlight">同一目录</span></li>
+                    <li>文件名必须<span class="highlight">完全一致</span>（区分大小写）</li>
+                    <li>HTML文件中的引用路径为：<code>cdut_spiral_data.json</code></li>
+                </ul>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <h3 style="color: #a78bfa; margin-bottom: 10px;">常见问题：</h3>
+                <ul style="padding-left: 20px;">
+                    <li style="margin-bottom: 10px;">
+                        <strong>Q: 显示"数据加载失败"</strong><br>
+                        A: 检查两个文件是否在同一目录，文件名是否正确
+                    </li>
+                    <li style="margin-bottom: 10px;">
+                        <strong>Q: 无法加载数据</strong><br>
+                        A: 刷新页面，检查浏览器控制台错误（F12）
+                    </li>
+                    <li>
+                        <strong>Q: 交互功能不正常</strong><br>
+                        A: 清除浏览器缓存，使用Chrome或Firefox
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">🚀 立即开始部署</h2>
+            
+            <div style="text-align: center; padding: 20px;">
+                <p style="margin-bottom: 20px; color: rgba(255, 255, 255, 0.7);">
+                    准备好以下文件后，点击下方按钮开始部署：
+                </p>
+                
+                <div style="margin-bottom: 30px; text-align: left; display: inline-block;">
+                    <ul class="checklist">
+                        <li>cdut_spiral_tower_full_fix_optimized.html</li>
+                        <li>cdut_spiral_data.json</li>
+                        <li>（可选）启动页_成都理工大学专业沿革螺旋塔.html</li>
+                    </ul>
+                </div>
+                
+                <br>
+                
+                <a href="https://code.coze.cn/" target="_blank" class="btn">
+                    🚀 前往扣子编程部署 →
+                </a>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">📊 项目特点</h2>
+            
+            <div class="grid-2">
+                <div>
+                    <h3 style="color: #a78bfa; margin-bottom: 15px;">✨ 优化优势</h3>
+                    <ul class="checklist">
+                        <li>HTML文件减少90.8%</li>
+                        <li>数据完全独立</li>
+                        <li>异步加载机制</li>
+                        <li>24小时智能缓存</li>
+                        <li>二次加载毫秒级</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 style="color: #a78bfa; margin-bottom: 15px;">🎯 功能清单</h3>
+                    <ul class="checklist">
+                        <li>螺旋塔3D可视化</li>
+                        <li>拖拽旋转、缩放</li>
+                        <li>年份切换动画</li>
+                        <li>院系详情查看</li>
+                        <li>专业详情查看</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; color: rgba(255, 255, 255, 0.4); font-size: 12px; margin-top: 40px;">
+            <p>💡 提示：首次加载需要1-2秒，后续访问将使用缓存，速度大幅提升</p>
+            <p style="margin-top: 10px;">© 2026 成都理工大学 | 专业沿革可视化系统 | 扣子编程部署版</p>
+        </div>
+    </div>
+
+    <script>
+        // 添加平滑滚动效果
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // 添加文件卡片的交互效果
+        document.querySelectorAll('.file-item').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-3px)';
+                this.style.transition = 'all 0.3s ease';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>成都理工大学专业沿革螺旋塔</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            min-height: 100vh;
+            overflow: hidden;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            color: #fff;
+            touch-action: none;
+        }
+        #bgImage {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.6;
+            z-index: 0;
+        }
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 16px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, transparent 100%);
+            z-index: 100;
+            text-align: center;
+        }
+        .header h1 { font-size: 15px; font-weight: 600; color: #60a5fa; letter-spacing: 1px; }
+        .header .subtitle { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 3px; }
+        
+        .tooltip {
+            position: fixed;
+            background: rgba(10, 15, 30, 0.92);
+            border: 1px solid rgba(96, 165, 250, 0.4);
+            border-radius: 8px;
+            padding: 10px 12px;
+            pointer-events: none;
+            z-index: 200;
+            max-width: 180px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .tooltip.show { opacity: 1; }
+        .tooltip .year { font-size: 16px; font-weight: bold; color: #60a5fa; margin-bottom: 4px; }
+        .tooltip .count { font-size: 11px; color: #f472b6; font-weight: 500; }
+        .tooltip .event { font-size: 9px; color: rgba(255,255,255,0.6); margin-top: 6px; line-height: 1.5; }
+        
+        .college-modal {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 20px;
+            background: rgba(8, 12, 25, 0.95);
+            border: 1px solid rgba(96, 165, 250, 0.5);
+            border-radius: 16px;
+            padding: 14px 16px;
+            z-index: 300;
+            width: calc(100% - 32px);
+            max-width: 360px;
+            max-height: 50vh;
+            overflow-y: auto;
+            display: none;
+        }
+        .college-modal.show { display: block; }
+        .college-modal .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .college-modal .college-name { 
+            font-size: 14px; 
+            font-weight: bold; 
+            flex: 1;
+            padding-right: 10px;
+        }
+        .college-modal .major-count {
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+        }
+        .close-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+        .close-btn:hover { background: rgba(255,255,255,0.2); }
+        
+        .major-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        .college-modal .major-item {
+            padding: 10px 12px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .college-modal .major-item:hover { 
+            background: rgba(255,255,255,0.12); 
+            border-color: rgba(96, 165, 250, 0.3);
+        }
+        .college-modal .major-item .major-name { 
+            font-size: 12px; 
+            font-weight: 500; 
+            line-height: 1.3;
+        }
+        .college-modal .major-item .major-hint { 
+            font-size: 9px; 
+            color: rgba(255,255,255,0.35); 
+            margin-top: 3px; 
+        }
+        
+        .major-detail {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(8, 12, 25, 0.95);
+            border: 1px solid rgba(96, 165, 250, 0.5);
+            border-radius: 16px;
+            padding: 20px;
+            z-index: 400;
+            width: calc(100% - 40px);
+            max-width: 320px;
+            display: none;
+        }
+        .major-detail.show { display: block; }
+        .major-detail .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .major-detail .major-title { 
+            font-size: 15px; 
+            font-weight: bold; 
+            flex: 1;
+        }
+        .major-detail .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .major-detail .info-row:last-child { border-bottom: none; }
+        .major-detail .info-label { color: rgba(255,255,255,0.5); font-size: 12px; }
+        .major-detail .info-value { font-size: 12px; font-weight: 500; }
+        
+        .back-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(96, 165, 250, 0.25);
+            border: 1px solid rgba(96, 165, 250, 0.5);
+            color: #fff;
+            padding: 10px 28px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            z-index: 100;
+            display: none;
+        }
+        .back-btn:active { transform: translateX(-50%) scale(0.95); }
+        .back-btn.show { display: block; }
+        
+        .hint { 
+            position: fixed; 
+            bottom: 35px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            font-size: 9px; 
+            color: rgba(255,255,255,0.35); 
+            z-index: 100; 
+            text-align: center; 
+            background: rgba(0,0,0,0.3);
+            padding: 6px 12px;
+            border-radius: 12px;
+        }
+        .hint.hidden { display: none; }
+        .hint-solar { 
+            position: fixed; 
+            bottom: 70px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            font-size: 9px; 
+            color: rgba(255,255,255,0.35); 
+            z-index: 100; 
+            text-align: center; 
+            display: none; 
+            background: rgba(0,0,0,0.3);
+            padding: 6px 12px;
+            border-radius: 12px;
+        }
+        .hint-solar.show { display: block; }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 250;
+            display: none;
+        }
+        .overlay.show { display: block; }
+        
+        .zoom-controls {
+            position: fixed;
+            right: 15px;
+            bottom: 100px;
+            z-index: 150;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .zoom-controls.show { display: flex; }
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(96, 165, 250, 0.3);
+            border: 1px solid rgba(96, 165, 250, 0.5);
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .zoom-btn:active { transform: scale(0.9); }
+    </style>
+</head>
+<body>
+    <img id="bgImage" src="https://www.coze.cn/s/v8Zr7z45yOI/?width_height=800x1067" alt="">
+    <canvas id="canvas"></canvas>
+    
+    <div class="header">
+        <h1>成都理工大学专业沿革螺旋塔</h1>
+        <p class="subtitle">1956 - 2025 七十年岁月长河</p>
+    </div>
+    
+    <div class="tooltip" id="tooltip">
+        <div class="year"></div>
+        <div class="count"></div>
+        <div class="event"></div>
+    </div>
+    
+    <div class="overlay" id="overlay"></div>
+    
+    <div class="college-modal" id="collegeModal">
+        <div class="modal-header">
+            <div class="college-name" id="collegeName"></div>
+            <div class="major-count" id="majorCount"></div>
+            <button class="close-btn" onclick="closeCollegeModal()">×</button>
+        </div>
+        <div class="major-grid" id="majorList"></div>
+    </div>
+    
+    <div class="major-detail" id="majorDetail">
+        <div class="detail-header">
+            <div class="major-title" id="majorTitle"></div>
+            <button class="close-btn" onclick="closeMajorDetail()">×</button>
+        </div>
+        <div class="info-row"><span class="info-label">专业代码</span><span class="info-value" id="majorCode"></span></div>
+        <div class="info-row"><span class="info-label">学制</span><span class="info-value" id="majorDuration"></span></div>
+        <div class="info-row"><span class="info-label">学位</span><span class="info-value" id="majorDegree"></span></div>
+        <div class="info-row"><span class="info-label">所属学院</span><span class="info-value" id="majorCollege"></span></div>
+    </div>
+    
+    <div class="zoom-controls" id="zoomControls">
+        <button class="zoom-btn" onclick="zoomIn()">+</button>
+        <button class="zoom-btn" onclick="zoomOut()">−</button>
+    </div>
+    
+    <button class="back-btn" id="backBtn">返回螺旋塔</button>
+    <div class="hint" id="hint">拖拽旋转 · 单击显示年份 · 双击进入学院</div>
+    <div class="hint-solar" id="hintSolar">拖拽旋转 · 双指缩放 · 双击学院查看专业</div>
+
+    <script>
+    // 声明全局数据变量
+    let data = [];
+    
+    // 显示加载状态
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.id = 'loading-overlay';
+    loadingOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;justify-content:center;align-items:center;z-index:10000;flex-direction:column;';
+    loadingOverlay.innerHTML = '<div style="color:#4ecdc4;font-size:24px;margin-bottom:20px;">数据加载中...</div><div style="color:#666;font-size:14px;">1956-2025 七十年专业沿革数据</div>';
+    document.body.appendChild(loadingOverlay);
+    
+    // 异步加载数据
+    async function loadData() {
+        try {
+            // 检查本地缓存
+            const cachedData = localStorage.getItem('cdut_spiral_data');
+            const cacheTimestamp = localStorage.getItem('cdut_spiral_data_timestamp');
+            const cacheValid = cacheTimestamp && (Date.now() - parseInt(cacheTimestamp)) < 24 * 60 * 60 * 1000; // 24小时缓存
+            
+            if (cachedData && cacheValid) {
+                console.log('使用缓存数据');
+                data = JSON.parse(cachedData);
+                initVisualization();
+                return;
+            }
+            
+            // 从服务器加载
+            const response = await fetch('cdut_spiral_data.json');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            data = await response.json();
+            
+            // 缓存数据
+            localStorage.setItem('cdut_spiral_data', JSON.stringify(data));
+            localStorage.setItem('cdut_spiral_data_timestamp', Date.now().toString());
+            
+            console.log(`数据加载成功，共 ${data.length} 年数据`);
+            initVisualization();
+            
+        } catch (error) {
+            console.error('数据加载失败:', error);
+            document.getElementById('loading-overlay').innerHTML = '<div style="color:#ff6b6b;font-size:24px;">数据加载失败</div><div style="color:#666;font-size:14px;margin-top:20px;">请检查网络连接后刷新页面</div>';
+        }
+    }
+    
+    // 修改原有的初始化函数
+    function initVisualization() {
+        // 移除加载遮罩
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) {
+            overlay.style.transition = 'opacity 0.5s ease';
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.remove(), 500);
+        }
+
+        const colleges = [
+            { name: "地球与行星科学学院", color: "#3b82f6", majors: [
+                { name: "地质学", code: "070901", duration: "4年", degree: "理学学士" },
+                { name: "地球化学", code: "070902", duration: "4年", degree: "理学学士" },
+                { name: "资源勘查工程", code: "081401", duration: "4年", degree: "工学学士" },
+                { name: "测绘工程", code: "081201", duration: "4年", degree: "工学学士" },
+                { name: "行星科学", code: "070804TK", duration: "4年", degree: "理学学士" }
+            ]},
+            { name: "能源学院", color: "#f59e0b", majors: [
+                { name: "石油工程", code: "081502", duration: "4年", degree: "工学学士" },
+                { name: "新能源科学与工程", code: "080503T", duration: "4年", degree: "工学学士" },
+                { name: "油气储运工程", code: "081504", duration: "4年", degree: "工学学士" }
+            ]},
+            { name: "环境与土木工程学院", color: "#10b981", majors: [
+                { name: "地质工程", code: "081401", duration: "4年", degree: "工学学士" },
+                { name: "土木工程", code: "081001", duration: "4年", degree: "工学学士" },
+                { name: "地下水科学与工程", code: "081404T", duration: "4年", degree: "工学学士" },
+                { name: "工程管理", code: "120103", duration: "4年", degree: "管理学学士" },
+                { name: "城市地下空间工程", code: "081005T", duration: "4年", degree: "工学学士" }
+            ]},
+            { name: "地球物理学院", color: "#8b5cf6", majors: [
+                { name: "地球物理学", code: "070801", duration: "4年", degree: "理学学士" },
+                { name: "勘查技术与工程", code: "081402", duration: "4年", degree: "工学学士" },
+                { name: "空间科学与技术", code: "070802", duration: "4年", degree: "理学学士" }
+            ]},
+            { name: "核技术与自动化工程学院", color: "#ef4444", majors: [
+                { name: "核工程与核技术", code: "082201", duration: "4年", degree: "工学学士" },
+                { name: "辐射防护与核安全", code: "082202", duration: "4年", degree: "工学学士" },
+                { name: "电气工程及其自动化", code: "080601", duration: "4年", degree: "工学学士" },
+                { name: "测控技术与仪器", code: "080301", duration: "4年", degree: "工学学士" }
+            ]},
+            { name: "材料与化学化工学院", color: "#ec4899", majors: [
+                { name: "应用化学", code: "070302", duration: "4年", degree: "理学学士" },
+                { name: "材料科学与工程", code: "080401", duration: "4年", degree: "工学学士" },
+                { name: "化学工程与工艺", code: "081301", duration: "4年", degree: "工学学士" },
+                { name: "新能源材料与器件", code: "080414T", duration: "4年", degree: "工学学士" }
+            ]},
+            { name: "管理科学学院", color: "#06b6d4", majors: [
+                { name: "工商管理", code: "120201K", duration: "4年", degree: "管理学学士" },
+                { name: "电子商务", code: "120801", duration: "4年", degree: "管理学学士" },
+                { name: "大数据管理与应用", code: "120108T", duration: "4年", degree: "管理学学士" },
+                { name: "人力资源管理", code: "120206", duration: "4年", degree: "管理学学士" },
+                { name: "物流管理", code: "120601", duration: "4年", degree: "管理学学士" }
+            ]},
+            { name: "计算机与网络安全学院", color: "#6366f1", majors: [
+                { name: "计算机科学与技术", code: "080901", duration: "4年", degree: "工学学士" },
+                { name: "软件工程", code: "080902", duration: "4年", degree: "工学学士" },
+                { name: "网络空间安全", code: "080911TK", duration: "4年", degree: "工学学士" },
+                { name: "人工智能", code: "080717T", duration: "4年", degree: "工学学士" }
+            ]},
+            { name: "商学院", color: "#f472b6", majors: [
+                { name: "会计学", code: "120203K", duration: "4年", degree: "管理学学士" },
+                { name: "市场营销", code: "120202", duration: "4年", degree: "管理学学士" },
+                { name: "经济学", code: "020101", duration: "4年", degree: "经济学学士" },
+                { name: "财务管理", code: "120204", duration: "4年", degree: "管理学学士" }
+            ]},
+            { name: "传播科学与艺术学院", color: "#a855f7", majors: [
+                { name: "广播电视编导", code: "130305", duration: "4年", degree: "艺术学学士" },
+                { name: "播音与主持艺术", code: "130309", duration: "4年", degree: "艺术学学士" },
+                { name: "视觉传达设计", code: "130502", duration: "4年", degree: "艺术学学士" }
+            ]},
+            { name: "文法学院", color: "#14b8a6", majors: [
+                { name: "法学", code: "030101K", duration: "4年", degree: "法学学士" },
+                { name: "社会学", code: "030301", duration: "4年", degree: "法学学士" },
+                { name: "公共事业管理", code: "120401", duration: "4年", degree: "管理学学士" }
+            ]},
+            { name: "外国语学院", color: "#f97316", majors: [
+                { name: "英语", code: "050201", duration: "4年", degree: "文学学士" },
+                { name: "日语", code: "050207", duration: "4年", degree: "文学学士" },
+                { name: "翻译", code: "050261", duration: "4年", degree: "文学学士" },
+                { name: "商务英语", code: "050262", duration: "4年", degree: "文学学士" }
+            ]},
+            { name: "马克思主义学院", color: "#dc2626", majors: [
+                { name: "思想政治教育", code: "030503", duration: "4年", degree: "法学学士" }
+            ]},
+            { name: "数学地质学院", color: "#0ea5e9", majors: [
+                { name: "数学与应用数学", code: "070101", duration: "4年", degree: "理学学士" },
+                { name: "信息与计算科学", code: "070102", duration: "4年", degree: "理学学士" }
+            ]},
+            { name: "体育学院", color: "#22c55e", majors: [
+                { name: "休闲体育", code: "040207T", duration: "4年", degree: "教育学学士" },
+                { name: "社会体育指导与管理", code: "040203", duration: "4年", degree: "教育学学士" }
+            ]},
+            { name: "地理与规划学院", color: "#84cc16", majors: [
+                { name: "地理信息科学", code: "070504", duration: "4年", degree: "理学学士" },
+                { name: "城乡规划", code: "082802", duration: "5年", degree: "工学学士" }
+            ]},
+            { name: "旅游与城乡规划学院", color: "#eab308", majors: [
+                { name: "旅游管理", code: "120901K", duration: "4年", degree: "管理学学士" },
+                { name: "会展经济与管理", code: "120903", duration: "4年", degree: "管理学学士" }
+            ]},
+            { name: "信息科学与技术学院", color: "#7c3aed", majors: [
+                { name: "电子信息工程", code: "080701", duration: "4年", degree: "工学学士" },
+                { name: "通信工程", code: "080703", duration: "4年", degree: "工学学士" },
+                { name: "物联网工程", code: "080905", duration: "4年", degree: "工学学士" }
+            ]},
+            { name: "工程技术学院", color: "#db2777", majors: [
+                { name: "机械工程", code: "080201", duration: "4年", degree: "工学学士" },
+                { name: "工业设计", code: "080205", duration: "4年", degree: "工学学士" }
+            ]},
+            { name: "沉积地质研究院", color: "#0891b2", majors: [
+                { name: "地质学", code: "070901", duration: "4年", degree: "理学学士" },
+                { name: "古生物学", code: "070903T", duration: "4年", degree: "理学学士" }
+            ]},
+            { name: "生态环境学院", color: "#059669", majors: [
+                { name: "环境工程", code: "082502", duration: "4年", degree: "工学学士" },
+                { name: "生态学", code: "071004", duration: "4年", degree: "理学学士" }
+            ]},
+            { name: "继续教育学院", color: "#9333ea", majors: [] }
+        ];
+
+        const keyEvents = [
+            { year: 1956, label: "建校", desc: "成都地质勘探学院" },
+            { year: 1958, label: "更名", desc: "成都地质学院" },
+            { year: 1965, label: "迁入", desc: "北京地质学院三系" },
+            { year: 1993, label: "更名", desc: "成都理工学院" },
+            { year: 2001, label: "合并", desc: "组建成都理工大学" },
+            { year: 2017, label: "双一流", desc: "入选双一流" },
+            { year: 2025, label: "现今", desc: "72个本科专业" }
+        ];
+
+        const majorData = {
+            1956: 4, 1957: 1, 1958: 6, 1959: 6, 1960: 10,
+            1961: 10, 1962: 10, 1963: 10, 1964: 10, 1965: 12,
+            1966: 12, 1967: 12, 1968: 12, 1969: 12, 1970: 10,
+            1971: 10, 1972: 10, 1973: 10, 1974: 10, 1975: 10,
+            1976: 10, 1977: 8, 1978: 10, 1979: 11, 1980: 11,
+            1981: 11, 1982: 12, 1983: 12, 1984: 13, 1985: 15,
+            1986: 15, 1987: 16, 1988: 16, 1989: 16, 1990: 16,
+            1991: 17, 1992: 17, 1993: 18, 1994: 19, 1995: 20,
+            1996: 21, 1997: 22, 1998: 23, 1999: 24, 2000: 26,
+            2001: 35, 2002: 38, 2003: 40, 2004: 42, 2005: 44,
+            2006: 46, 2007: 48, 2008: 50, 2009: 52, 2010: 50,
+            2011: 52, 2012: 54, 2013: 56, 2014: 58, 2015: 60,
+            2016: 62, 2017: 60, 2018: 65, 2019: 68, 2020: 68,
+            2021: 70, 2022: 72, 2023: 72, 2024: 72, 2025: 72
+        };
+        
+        function getMajorCount(year) { return majorData[year] || 4; }
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const tooltip = document.getElementById('tooltip');
+        const backBtn = document.getElementById('backBtn');
+        const hint = document.getElementById('hint');
+        const hintSolar = document.getElementById('hintSolar');
+        const collegeModal = document.getElementById('collegeModal');
+        const majorDetail = document.getElementById('majorDetail');
+        const overlay = document.getElementById('overlay');
+        const zoomControls = document.getElementById('zoomControls');
+        
+        let width, height, centerX, centerY;
+        let currentView = 'spiral';
+        let selectedYear = null;
+        
+        let rotationY = 0;
+        let autoRotate = true;
+        let isDragging = false;
+        let lastTouchX = 0;
+        
+        let solarRotX = 0.5;
+        let solarRotY = 0;
+        let solarDragging = false;
+        // 触控双击检测变量
+        let lastTapTime = 0;
+        let lastTapX = 0;
+        let lastTapY = 0;
+        const TAP_THRESHOLD = 30;  // 触控容错范围
+        const DOUBLE_TAP_DELAY = 300;  // 双击间隔(ms)
+
+        let solarLastX = 0;
+        let solarLastY = 0;
+        let zoomLevel = 1;
+        
+        // 动画相关
+        let animationTime = 0;
+        let majorRotationAngles = []; // 每个学院的专业旋转角度
+        
+        const startYear = 1956;
+        const endYear = 2025;
+        const totalYears = endYear - startYear + 1;
+        const rings = 6;
+        const spiralHeight = 800;
+        
+        let spiralNodes = [];
+        let collegeNodes = [];
+        
+        function resize() {
+            const dpr = window.devicePixelRatio || 1;
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+            ctx.scale(dpr, dpr);
+            centerX = width / 2;
+            centerY = height / 2;
+            generateSpiralNodes();
+        }
+        
+        function generateSpiralNodes() {
+            spiralNodes = [];
+            const baseRadius = Math.min(width, height) * 0.18;
+            for (let i = 0; i < totalYears; i++) {
+                const year = startYear + i;
+                const progress = i / totalYears;
+                const angle = progress * rings * Math.PI * 2;
+                spiralNodes.push({ 
+                    localX: Math.cos(angle) * baseRadius,
+                    localY: (1 - progress) * spiralHeight - spiralHeight / 2,
+                    localZ: Math.sin(angle) * baseRadius,
+                    x: 0, y: 0, scale: 1, 
+                    year, count: getMajorCount(year), 
+                    size: 12, // 统一大小
+                    specialColor: (function() {
+                        const specialYears = {
+                            1956: '#FF6B6B', // 建校 - 红色
+                            1958: '#FFA500', // 更名 - 橙色
+                            1965: '#9370DB', // 迁入 - 紫色
+                            1993: '#FFA500', // 更名 - 橙色
+                            2001: '#FFD700', // 合并 - 金色
+                            2017: '#00FF7F', // 双一流 - 绿色
+                            2025: '#00CED1'  // 现今 - 青色
+                        };
+                        return specialYears[year] || null;
+                    })()
+                });
+            }
+        }
+        
+        function project3D(lx, ly, lz, rotX, rotY) {
+            let x = lx * Math.cos(rotY) - lz * Math.sin(rotY);
+            let z = lx * Math.sin(rotY) + lz * Math.cos(rotY);
+            let y = ly;
+            let y2 = y * Math.cos(rotX) - z * Math.sin(rotX);
+            let z2 = y * Math.sin(rotX) + z * Math.cos(rotX);
+            const perspective = 1200;
+            const scale = perspective / (perspective + z2);
+            return { x: centerX + x * scale, y: centerY + y2 * scale * 0.6, scale, z: z2 };
+        }
+        
+        function drawClearSphere(x, y, radius, color, opacity, glow = false) {
+            const r = radius;
+            
+            // 发光效果（可选）
+            if (glow) {
+                const glowGradient = ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 2);
+                glowGradient.addColorStop(0, color + '40');
+                glowGradient.addColorStop(1, color + '00');
+                ctx.beginPath();
+                ctx.arc(x, y, r * 2, 0, Math.PI * 2);
+                ctx.fillStyle = glowGradient;
+                ctx.globalAlpha = opacity * 0.5;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+            
+            const gradient = ctx.createRadialGradient(
+                x - r * 0.3, y - r * 0.3, r * 0.1,
+                x, y, r
+            );
+            gradient.addColorStop(0, '#ffffff');
+            gradient.addColorStop(0.2, color);
+            gradient.addColorStop(0.8, color);
+            gradient.addColorStop(1, adjustBrightness(color, -40));
+            
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.globalAlpha = opacity;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.strokeStyle = adjustBrightness(color, -20);
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = opacity * 0.8;
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+            
+            return r;
+        }
+        
+        function adjustBrightness(hex, amount) {
+            const num = parseInt(hex.slice(1), 16);
+            const r = Math.max(0, Math.min(255, (num >> 16) + amount));
+            const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amount));
+            const b = Math.max(0, Math.min(255, (num & 0x0000FF) + amount));
+            return '#' + (r << 16 | g << 8 | b).toString(16).padStart(6, '0');
+        }
+        
+        function drawSpiral() {
+            ctx.clearRect(0, 0, width, height);
+            
+            spiralNodes.forEach(node => {
+                const proj = project3D(node.localX, node.localY, node.localZ, 0, rotationY);
+                node.x = proj.x; node.y = proj.y; node.scale = proj.scale; node.z = proj.z;
+            });
+            
+            const baseRadius = Math.min(width, height) * 0.18;
+            
+            ctx.beginPath();
+            const pathPoints = [];
+            for (let i = 0; i <= totalYears; i += 0.2) {
+                const progress = i / totalYears;
+                const angle = progress * rings * Math.PI * 2;
+                const proj = project3D(
+                    Math.cos(angle) * baseRadius,
+                    (1 - progress) * spiralHeight - spiralHeight / 2,
+                    Math.sin(angle) * baseRadius, 0, rotationY
+                );
+                pathPoints.push(proj);
+            }
+            
+            for (let i = 1; i < pathPoints.length; i++) {
+                const avgZ = (pathPoints[i-1].z + pathPoints[i].z) / 2;
+                const opacity = Math.max(0.15, Math.min(0.5, (1 - avgZ / 600) * 0.5));
+                
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(96, 165, 250, ${opacity})`;
+                ctx.lineWidth = 2.5 * Math.min(pathPoints[i-1].scale, pathPoints[i].scale);
+                ctx.moveTo(pathPoints[i-1].x, pathPoints[i-1].y);
+                ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+                ctx.stroke();
+            }
+            
+            const sortedNodes = [...spiralNodes].sort((a, b) => b.z - a.z);
+            
+            sortedNodes.forEach(node => {
+                const size = node.size * node.scale;
+                const opacity = Math.max(0.5, Math.min(1, (1 - node.z / 600)));
+                // 使用特殊颜色或渐变色
+                let color;
+                if (node.specialColor) {
+                    color = node.specialColor;
+                } else {
+                    const hue = 200 + ((node.year - startYear) / totalYears) * 60;
+                    color = `hsl(${hue}, 70%, 60%)`;
+                }
+                
+                // 特殊年份发光效果
+                const shouldGlow = node.specialColor && [1956, 2001, 2017, 2025].includes(node.year);
+                drawClearSphere(node.x, node.y, size, color, opacity, shouldGlow);
+                
+                const keyEvent = keyEvents.find(e => e.year === node.year);
+                if (keyEvent) {
+                    ctx.font = `bold ${9 * node.scale}px PingFang SC`;
+                    ctx.fillStyle = '#fff';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(node.year, node.x, node.y);
+                    
+                    ctx.font = `${8 * node.scale}px PingFang SC`;
+                    ctx.fillStyle = `rgba(255,255,255,${opacity * 0.95})`;
+                    ctx.textAlign = 'left';
+                    ctx.fillText(keyEvent.label, node.x + size + 4, node.y - 6);
+                    ctx.font = `${7 * node.scale}px PingFang SC`;
+                    ctx.fillStyle = `rgba(255,255,255,${opacity * 0.7})`;
+                    ctx.fillText(keyEvent.desc, node.x + size + 4, node.y + 6);
+                } else if (node.year % 10 === 0) {
+                    ctx.font = `${9 * node.scale}px PingFang SC`;
+                    ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.85})`;
+                    ctx.textAlign = 'center';
+                    ctx.fillText(node.year, node.x, node.y - size - 5);
+                }
+            });
+        }
+        
+        function drawSolarSystem() {
+            ctx.clearRect(0, 0, width, height);
+            
+            animationTime += 0.016; // 动画时间
+            
+            const orbitRadiusY = Math.min(width, height) * 0.35 * zoomLevel;
+            const orbitRadiusX = Math.min(width, height) * 0.22 * zoomLevel;
+            // collegeNodes = [];  // 已移除：避免时序竞争
+            
+            let renderObjects = [];
+            
+            // 中心太阳 - 带脉动效果
+            const pulseScale = 1 + Math.sin(animationTime * 2) * 0.05;
+            renderObjects.push({
+                type: 'sun',
+                lx: 0, ly: 0, lz: 0,
+                radius: 20 * pulseScale,
+                color: '#3b82f6'
+            });
+            
+            // 22个学院
+            colleges.forEach((college, i) => {
+                const angle = (i / colleges.length) * Math.PI * 2 - Math.PI / 2;
+                const lx = Math.cos(angle) * orbitRadiusX;
+                const ly = Math.sin(angle) * orbitRadiusY;
+                const lz = 0;
+                
+                renderObjects.push({
+                    type: 'college',
+                    index: i,
+                    lx, ly, lz,
+                    radius: 14,
+                    color: college.color,
+                    name: college.name
+                });
+                
+                // 专业围绕学院旋转
+                if (college.majors && college.majors.length > 0) {
+                    // 初始化旋转角度
+                    if (majorRotationAngles[i] === undefined) {
+                        majorRotationAngles[i] = Math.random() * Math.PI * 2;
+                    }
+                    
+                    // 专业旋转动画
+                    majorRotationAngles[i] += 0.008 + i * 0.001; // 不同学院旋转速度略有不同
+                    
+                    const majorOrbitRadius = 50 * zoomLevel;
+                    college.majors.forEach((major, j) => {
+                        const majorAngle = majorRotationAngles[i] + (j / college.majors.length) * Math.PI * 2;
+                        
+                        // 椭圆轨道 + 垂直波动
+                        const mlx = lx + Math.cos(majorAngle) * majorOrbitRadius;
+                        const mly = ly + Math.sin(majorAngle) * majorOrbitRadius * 0.4;
+                        const mlz = Math.sin(majorAngle * 2) * 20 + Math.cos(animationTime * 3 + j) * 10;
+                        
+                        renderObjects.push({
+                            type: 'major',
+                            parentIndex: i,
+                            lx: mlx, ly: mly, lz: mlz,
+                            radius: 4,
+                            color: college.color,
+                            majorData: major,
+                            collegeName: college.name,
+                            angle: majorAngle
+                        });
+                    });
+                }
+            });
+            
+            renderObjects.forEach(obj => {
+                const proj = project3D(obj.lx, obj.ly, obj.lz, solarRotX, solarRotY);
+                obj.x = proj.x; obj.y = proj.y; obj.scale = proj.scale; obj.z = proj.z;
+            });
+            
+            renderObjects.sort((a, b) => b.z - a.z);
+            
+            // 绘制轨道环（装饰效果）
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY, orbitRadiusX * 0.8, orbitRadiusY * 0.8, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(96, 165, 250, 0.1)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            // 连接线 - 带动画效果
+            const majors = renderObjects.filter(o => o.type === 'major');
+            majors.forEach(major => {
+                const parent = renderObjects.find(o => o.type === 'college' && o.index === major.parentIndex);
+                if (parent) {
+                    const opacity = Math.max(0.2, Math.min(0.6, (1 - major.z / 600) * 0.6));
+                    
+                    // 渐变连接线
+                    const gradient = ctx.createLinearGradient(parent.x, parent.y, major.x, major.y);
+                    gradient.addColorStop(0, major.color + Math.round(opacity * 255 * 0.8).toString(16).padStart(2, '0'));
+                    gradient.addColorStop(1, major.color + Math.round(opacity * 255 * 0.3).toString(16).padStart(2, '0'));
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(parent.x, parent.y);
+                    ctx.lineTo(major.x, major.y);
+                    ctx.strokeStyle = gradient;
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                }
+            });
+            
+            // 绘制球体
+            renderObjects.forEach(obj => {
+                const opacity = Math.max(0.6, Math.min(1, (1 - obj.z / 600)));
+                
+                if (obj.type === 'major') {
+                    // 专业球 - 带拖尾效果
+                    const tailLength = 3;
+                    for (let t = tailLength; t >= 0; t--) {
+                        const tailOpacity = opacity * (1 - t / tailLength) * 0.3;
+                        const tailAngle = obj.angle - t * 0.15;
+                        const college = colleges[obj.parentIndex];
+                        const tailRadius = 50 * zoomLevel;
+                        const angle = (obj.parentIndex / colleges.length) * Math.PI * 2 - Math.PI / 2;
+                        const clx = Math.cos(angle) * orbitRadiusX;
+                        const cly = Math.sin(angle) * orbitRadiusY;
+                        
+                        const tx = clx + Math.cos(tailAngle) * tailRadius;
+                        const ty = cly + Math.sin(tailAngle) * tailRadius * 0.4;
+                        const tz = Math.sin(tailAngle * 2) * 20;
+                        
+                        const tailProj = project3D(tx, ty, tz, solarRotX, solarRotY);
+                        
+                        ctx.beginPath();
+                        ctx.arc(tailProj.x, tailProj.y, obj.radius * tailProj.scale * (1 - t / tailLength * 0.5), 0, Math.PI * 2);
+                        ctx.fillStyle = obj.color;
+                        ctx.globalAlpha = tailOpacity;
+                        ctx.fill();
+                        ctx.globalAlpha = 1;
+                    }
+                }
+                
+                const r = drawClearSphere(obj.x, obj.y, obj.radius * obj.scale, obj.color, opacity, obj.type === 'sun');
+                obj.screenRadius = r;
+                
+                if (obj.type === 'sun') {
+                    ctx.font = 'bold 13px PingFang SC';
+                    ctx.fillStyle = '#fff';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(selectedYear, obj.x, obj.y);
+                    
+                } else if (obj.type === 'college') {
+                    // 重要：r就是screenRadius，必须显式存储
+                    collegeNodes.push({ 
+                        x: obj.x, 
+                        y: obj.y, 
+                        screenRadius: r,  // 使用绘制后的实际屏幕半径
+                        collegeIndex: obj.index,
+                        name: obj.name,
+                        color: obj.color
+                    });
+                    if (obj.index < 3) console.log(`[填充] 学院${obj.index}: ${obj.name}, 位置(${obj.x.toFixed(0)}, ${obj.y.toFixed(0)})`);
+                    
+                    ctx.font = `bold ${8 * obj.scale}px PingFang SC`;
+                    ctx.fillStyle = `rgba(255,255,255,${opacity * 0.9})`;
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'middle';
+                    const displayName = obj.name.length > 6 ? obj.name.substring(0, 6) : obj.name;
+                    ctx.fillText(displayName, obj.x + r + 5, obj.y);
+                }
+            });
+        }
+        
+        function animate() {
+            if (currentView === 'spiral') {
+                if (autoRotate && !isDragging) rotationY += 0.003;
+                drawSpiral();
+            } else {
+                drawSolarSystem();
+            }
+            requestAnimationFrame(animate);
+        }
+        
+        function zoomIn() {
+            zoomLevel = Math.min(2.5, zoomLevel + 0.3);
+        }
+        
+        function zoomOut() {
+            zoomLevel = Math.max(0.5, zoomLevel - 0.3);
+        }
+        
+        let lastSolarClickTime = 0;
+        let lastSolarClickedNode = null;
+        
+        function checkSolarClick(x, y) {
+            if (currentView !== 'solar') return;
+            
+            const currentTime = Date.now();
+            
+            for (const node of collegeNodes) {
+                const dist = Math.sqrt(Math.pow(x - node.x, 2) + Math.pow(y - node.y, 2));
+                if (dist < node.screenRadius + 35) {
+                    if (lastSolarClickedNode === node && currentTime - lastSolarClickTime < 500) {
+                        showCollegeModal(node.collegeIndex);
+                        lastSolarClickTime = 0;
+                        lastSolarClickedNode = null;
+                    } else {
+                        lastSolarClickTime = currentTime;
+                        lastSolarClickedNode = node;
+                    }
+                    return;
+                }
+            }
+        }
+        
+        function showCollegeModal(collegeIndex) {
+            const college = colleges[collegeIndex];
+            document.getElementById('collegeName').textContent = college.name;
+            document.getElementById('collegeName').style.color = college.color;
+            document.getElementById('majorCount').textContent = (college.majors ? college.majors.length : 0) + '个专业';
+            
+            const majorList = document.getElementById('majorList');
+            majorList.innerHTML = '';
+            
+            if (college.majors && college.majors.length > 0) {
+                college.majors.forEach(major => {
+                    const item = document.createElement('div');
+                    item.className = 'major-item';
+                    item.innerHTML = `<div class="major-name">${major.name}</div><div class="major-hint">点击查看详情</div>`;
+                    item.onclick = () => showMajorDetail(major, college.name, college.color);
+                    majorList.appendChild(item);
+                });
+            } else {
+                majorList.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.4);padding:20px;font-size:12px;">暂无本科专业</div>';
+            }
+            
+            overlay.classList.add('show');
+            collegeModal.classList.add('show');
+        }
+        
+        function closeCollegeModal() {
+            collegeModal.classList.remove('show');
+            overlay.classList.remove('show');
+        }
+        
+        function showMajorDetail(major, collegeName, color) {
+            closeCollegeModal();
+            
+            document.getElementById('majorDetailTitle').textContent = major.name;
+            document.getElementById('majorDetailTitle').style.color = color;
+            
+            document.getElementById('majorDetailCode').textContent = major.code || "无";
+            document.getElementById('majorDetailDuration').textContent = major.degree || "无";
+            document.getElementById('majorDetailDegree').textContent = major.degree || "无";
+            
+            // 显示原所在院系和归属学院
+            document.getElementById('majorDetailOriginalDept').textContent = major.original_dept || major.original_college || "无";
+            document.getElementById('majorDetailCollege').textContent = major.college || collegeName;
+            
+            majorDetail.classList.add('show');
+        }
+        
+        function closeMajorDetail() {
+            majorDetail.classList.remove('show');
+            overlay.classList.add('show');
+            collegeModal.classList.add('show');
+        }
+        
+        overlay.addEventListener('click', () => {
+            closeCollegeModal();
+            closeMajorDetail();
+        });
+        
+        let lastClickTime = 0;
+        let lastClickedNode = null;
+        let clickTimeout = null;
+        
+        function checkClick(x, y) {
+            if (currentView !== 'spiral') return;
+            
+            const currentTime = Date.now();
+            const sortedNodes = [...spiralNodes].sort((a, b) => a.z - b.z);
+            
+            for (const node of sortedNodes) {
+                const dist = Math.sqrt(Math.pow(x - node.x, 2) + Math.pow(y - node.y, 2));
+                if (dist < node.size * node.scale + 15) {
+                    // 双击检测
+                    if (lastClickedNode === node && currentTime - lastClickTime < 500) {
+                        clearTimeout(clickTimeout);
+                        showSolarSystemWithTransition(node.year);
+                        lastClickTime = 0;
+                        lastClickedNode = null;
+                    } else {
+                        lastClickTime = currentTime;
+                        lastClickedNode = node;
+                        showYearPopup(node);
+                    }
+                    return;
+                }
+            }
+        }
+        
+        function showYearPopup(node) {
+            const keyEvent = keyEvents.find(e => e.year === node.year);
+            tooltip.querySelector('.year').textContent = node.year + '年';
+            tooltip.querySelector('.count').textContent = '专业: ' + node.count + '个';
+            tooltip.querySelector('.event').textContent = keyEvent ? keyEvent.label + '：' + keyEvent.desc : '';
+            
+            let left = node.x + 20;
+            let top = node.y - 80;
+            if (left + 180 > width) left = node.x - 200;
+            if (top < 80) top = node.y + 20;
+            
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+            tooltip.classList.add('show');
+            
+            clearTimeout(clickTimeout);
+            clickTimeout = setTimeout(() => {
+                tooltip.classList.remove('show');
+            }, 3000);
+        }
+        
+        function showSolarSystemWithTransition(year) {
+            const transitionOverlay = document.createElement('div');
+            transitionOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: radial-gradient(circle at center, rgba(59, 130, 246, 0.3) 0%, rgba(0, 0, 0, 0.9) 100%);
+                z-index: 500;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                opacity: 0;
+                transition: opacity 0.4s ease-in-out;
+            `;
+            
+            transitionOverlay.innerHTML = `
+                <div style="font-size: 48px; font-weight: bold; color: #60a5fa; margin-bottom: 20px;">
+                    ${year}
+                </div>
+                <div style="font-size: 16px; color: rgba(255,255,255,0.7); margin-bottom: 30px;">
+                    ${getMajorCount(year)}个专业
+                </div>
+                <div style="font-size: 14px; color: rgba(255,255,255,0.5);">
+                    正在加载学院数据...
+                </div>
+            `;
+            
+            document.body.appendChild(transitionOverlay);
+            
+            setTimeout(() => {
+                transitionOverlay.style.opacity = '1';
+            }, 50);
+            
+            setTimeout(() => {
+                showSolarSystem(year);
+                transitionOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    transitionOverlay.remove();
+                }, 400);
+            }, 800);
+        }
+        
+        function showSolarSystem(year) {
+            selectedYear = year;
+            currentView = 'solar';
+            solarRotX = 0.5;
+            solarRotY = 0;
+            zoomLevel = 1;
+            majorRotationAngles = []; // 重置旋转角度
+            backBtn.classList.add('show');
+            hint.classList.add('hidden');
+            hintSolar.classList.add('show');
+            zoomControls.classList.add('show');
+        }
+        
+        function showSpiral() {
+            currentView = 'spiral';
+            selectedYear = null;
+            backBtn.classList.remove('show');
+            hint.classList.remove('hidden');
+            hintSolar.classList.remove('show');
+            zoomControls.classList.remove('show');
+            closeCollegeModal();
+            closeMajorDetail();
+        }
+        
+        function showTooltip(x, y, node) {
+            const keyEvent = keyEvents.find(e => e.year === node.year);
+            tooltip.querySelector('.year').textContent = node.year + '年';
+            tooltip.querySelector('.count').textContent = '专业: ' + node.count + '个';
+            tooltip.querySelector('.event').textContent = keyEvent ? keyEvent.label + '：' + keyEvent.desc : '';
+            let left = x + 12, top = y - 60;
+            if (left + 180 > width) left = x - 195;
+            if (top < 80) top = y + 15;
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+            tooltip.classList.add('show');
+        }
+        
+        function hideTooltip() { tooltip.classList.remove('show'); }
+        
+        canvas.addEventListener('wheel', (e) => {
+            if (currentView === 'solar') {
+                e.preventDefault();
+                if (e.deltaY < 0) {
+                    zoomIn();
+                } else {
+                    zoomOut();
+                }
+            }
+        });
+        
+        canvas.addEventListener('mousedown', (e) => {
+            if (currentView === 'spiral') {
+                isDragging = true;
+                autoRotate = false;
+                lastTouchX = e.clientX;
+            } else {
+                solarDragging = true;
+                solarLastX = e.clientX;
+                solarLastY = e.clientY;
+            }
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (currentView === 'spiral') {
+                if (isDragging) {
+                    rotationY += (e.clientX - lastTouchX) * 0.005;
+                    lastTouchX = e.clientX;
+                } else {
+                    const rect = canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    let found = false;
+                    const sortedNodes = [...spiralNodes].sort((a, b) => a.z - b.z);
+                    for (const node of sortedNodes) {
+                        if (Math.sqrt(Math.pow(x - node.x, 2) + Math.pow(y - node.y, 2)) < node.size * node.scale + 15) {
+                            showTooltip(e.clientX, e.clientY, node);
+                            canvas.style.cursor = 'pointer';
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) { hideTooltip(); canvas.style.cursor = 'grab'; }
+                }
+            } else {
+                if (solarDragging) {
+                    solarRotY += (e.clientX - solarLastX) * 0.006;
+                    solarRotX += (e.clientY - solarLastY) * 0.004;
+                    solarRotX = Math.max(0.1, Math.min(1.4, solarRotX));
+                    solarLastX = e.clientX;
+                    solarLastY = e.clientY;
+                }
+            }
+        });
+        
+        canvas.addEventListener('mouseup', () => { isDragging = false; solarDragging = false; });
+        
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            if (currentView === 'spiral') {
+                checkClick(x, y);
+            } else {
+                checkSolarClick(x, y);
+            }
+        });
+        
+        canvas.addEventListener('mouseleave', () => { isDragging = false; solarDragging = false; hideTooltip(); });
+        
+        let initialPinchDistance = 0;
+        let initialZoomLevel = 1;
+        
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (currentView === 'spiral') {
+                isDragging = true;
+                autoRotate = false;
+                lastTouchX = e.touches[0].clientX;
+            } else {
+                if (e.touches.length === 2) {
+                    initialPinchDistance = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    initialZoomLevel = zoomLevel;
+                } else {
+                    solarDragging = true;
+                    solarLastX = e.touches[0].clientX;
+                    solarLastY = e.touches[0].clientY;
+                }
+            }
+        });
+        
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (currentView === 'spiral' && isDragging && e.touches.length === 1) {
+                rotationY += (e.touches[0].clientX - lastTouchX) * 0.005;
+                lastTouchX = e.touches[0].clientX;
+            } else if (currentView === 'solar') {
+                    console.log(`[双击] 学院页面，collegeNodes数量: ${collegeNodes.length}`);
+                if (e.touches.length === 2) {
+                    const currentDistance = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    zoomLevel = Math.max(0.5, Math.min(2.5, initialZoomLevel * (currentDistance / initialPinchDistance)));
+                } else if (solarDragging && e.touches.length === 1) {
+                    solarRotY += (e.touches[0].clientX - solarLastX) * 0.006;
+                    solarRotX += (e.touches[0].clientY - solarLastY) * 0.004;
+                    solarRotX = Math.max(0.1, Math.min(1.4, solarRotX));
+                    solarLastX = e.touches[0].clientX;
+                    solarLastY = e.touches[0].clientY;
+                }
+            }
+        });
+        
+        canvas.addEventListener('touchend', (e) => {
+            const touch = e.changedTouches[0];
+            const rect = canvas.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            
+            if (currentView === 'spiral') {
+                if (Math.abs(touch.clientX - lastTouchX) < 10) {
+                    checkClick(x, y);
+                }
+            } else {
+                if (e.touches.length === 0 && Math.abs(touch.clientX - solarLastX) < 10) {
+                    checkSolarClick(x, y);
+                }
+            }
+            isDragging = false;
+            solarDragging = false;
+        });
+        
+        canvas.addEventListener('dblclick', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            if (currentView === 'spiral') {
+                const sortedNodes = [...spiralNodes].sort((a, b) => a.z - b.z);
+                for (const node of sortedNodes) {
+                    const dist = Math.sqrt(Math.pow(x - node.x, 2) + Math.pow(y - node.y, 2));
+                    if (dist < node.size * node.scale + 15) {
+                        showSolarSystemWithTransition(node.year);
+                        return;
+                    }
+                }
+            } else if (currentView === 'solar') {
+                for (const node of collegeNodes) {
+                    const dist = Math.sqrt(Math.pow(x - node.x, 2) + Math.pow(y - node.y, 2));
+                    if (dist < node.screenRadius + 35) {
+                        showCollegeModal(node.collegeIndex);
+                        return;
+                    }
+                }
+            }
+        });
+        
+        backBtn.addEventListener('click', showSpiral);
+        
+        resize();
+        window.addEventListener('resize', resize);
+        animate();
+    </script>
+</body>
+</html>
